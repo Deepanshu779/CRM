@@ -2,7 +2,7 @@
 
 A high-fidelity, full-stack Customer Relationship Management (CRM) platform built with **Flask** and **React**. Designed with a premium, corporate light-mode aesthetic and packed with data-driven features for managing leads, customers, and business analytics.
 
-![Dashboard Preview](frontend/public/assets/login_bg.png) *Note: Replace with your actual dashboard screenshot*
+**[🌐 Live Demo](https://crm-three-beige.vercel.app/)**
 
 ## ✨ Key Features
 
@@ -12,7 +12,7 @@ A high-fidelity, full-stack Customer Relationship Management (CRM) platform buil
 *   **💬 Interaction Tracking**: Log every call, email, and meeting with specific badges and detailed descriptions.
 *   **📈 Reports & Analytics**: Dynamic sales pipeline funnels, conversion rate calculations, and leads-over-time trend lines.
 *   **🔐 Secure Authentication**: JWT-based login and signup with a professional 50/50 split-screen layout and password visibility toggles.
-*   **⚙️ Profile & Settings**: Self-service profile management and security (password) updates.
+*   **⚙️ Profile Management**: Self-service profile management, security updates, and interactive profile photo uploads.
 *   **🔔 Notifications**: Integrated activity feed for lead assignments and deal closures.
 
 ## 🛠️ Tech Stack
@@ -24,33 +24,10 @@ A high-fidelity, full-stack Customer Relationship Management (CRM) platform buil
 ## 🚀 Getting Started
 
 ### Prerequisites
-*   Python 3.8+
+*   Python 3.14+
 *   Node.js 16+
 *   npm
 
-### Backend Setup
-1. Navigate to the `backend/` directory.
-2. Install dependencies:
-   ```bash
-   pip install flask flask_sqlalchemy flask_cors flask_bcrypt pyjwt
-   ```
-3. Initialize the database and run the server:
-   ```bash
-   python app.py
-   ```
-   *The backend will run on `http://127.0.0.1:5000`*
-
-### Frontend Setup
-1. Navigate to the `frontend/` directory.
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Build the production bundle:
-   ```bash
-   npm run build
-   ```
-   *The Flask backend will serve the bundled React app automatically.*
 
 ## 📂 Project Structure
 
@@ -60,7 +37,9 @@ CRMProject/
 │   ├── app.py          # Main entry point & Flask config
 │   ├── routes.py       # API endpoints & Business logic
 │   ├── models.py       # Database schema
-│   └── database.db     # SQLite Database
+│   ├── database.db     # SQLite Database
+│   ├── requirements.txt
+│   └── uploads/        # User uploaded profile photos
 ├── frontend/
 │   ├── src/
 │   │   ├── pages/      # 10+ Professional Interfaces
