@@ -13,8 +13,14 @@ CORS(app)
 
 # Database configuration
 basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'database.db')
+data_dir = os.environ.get('DATA_DIR', basedir)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(data_dir, 'database.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Configure uploads
+UPLOAD_FOLDER = os.path.join(data_dir, 'uploads')
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 db.init_app(app)
 
@@ -23,6 +29,12 @@ with app.app_context():
 
 # Register API routes
 app.register_blueprint(routes, url_prefix='/api')
+
+# Serve uploaded files
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
 
 # Serve React App for any other route (SPA fallback)
 @app.route('/', defaults={'path': ''})

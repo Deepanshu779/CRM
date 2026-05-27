@@ -5,6 +5,7 @@ import datetime
 from flask_bcrypt import Bcrypt
 from functools import wraps
 import os
+from werkzeug.utils import secure_filename
 
 routes = Blueprint('routes', __name__)
 bcrypt = Bcrypt()
@@ -34,7 +35,7 @@ def signup():
         return jsonify({'message': 'Email already exists!'}), 400
         
     hashed_password = bcrypt.generate_password_hash(data['password']).decode('utf-8')
-    new_user = User(username=data['username'], email=data['email'], password_hash=hashed_password, role=data.get('role', 'sales_rep'))
+    new_user = User(username=data['username'], email=data['email'], password_hash=hashed_password, role=data.get('role', 'sales_rep')) # type: ignore
     db.session.add(new_user)
     try:
         db.session.commit()
@@ -69,7 +70,7 @@ def get_customers(current_user):
 @token_required
 def add_customer(current_user):
     data = request.get_json()
-    new_customer = Customer(name=data['name'], email=data['email'], phone=data.get('phone'), company=data.get('company'), notes=data.get('notes'))
+    new_customer = Customer(name=data['name'], email=data['email'], phone=data.get('phone'), company=data.get('company'), notes=data.get('notes')) # type: ignore
     db.session.add(new_customer)
     db.session.commit()
     return jsonify({'message': 'Customer added!'}), 201
@@ -116,7 +117,7 @@ def get_leads(current_user):
 @token_required
 def add_lead(current_user):
     data = request.get_json()
-    new_lead = Lead(customer_id=data['customer_id'], status=data.get('status', 'New'), assigned_to=data.get('assigned_to'), notes=data.get('notes'))
+    new_lead = Lead(customer_id=data['customer_id'], status=data.get('status', 'New'), assigned_to=data.get('assigned_to'), notes=data.get('notes')) # type: ignore
     db.session.add(new_lead)
     db.session.commit()
     return jsonify({'message': 'Lead created!'}), 201
@@ -156,11 +157,7 @@ def get_interactions(current_user):
 @token_required
 def add_interaction(current_user):
     data = request.get_json()
-    new_interaction = Interaction(
-        lead_id=data['lead_id'], 
-        interaction_type=data['interaction_type'], 
-        description=data.get('description')
-    )
+    new_interaction = Interaction(lead_id=data['lead_id'], interaction_type=data['interaction_type'], description=data.get('description')) # type: ignore
     db.session.add(new_interaction)
     db.session.commit()
     return jsonify({'message': 'Interaction logged!'}), 201
@@ -173,6 +170,7 @@ def get_profile(current_user):
         'username': current_user.username,
         'email': current_user.email,
         'role': current_user.role,
+        'photo_url': current_user.photo_url,
         'created_at': current_user.created_at.strftime('%Y-%m-%d')
     })
 
@@ -184,6 +182,8 @@ def update_profile(current_user):
         current_user.username = data['username']
     if 'email' in data:
         current_user.email = data['email']
+    if 'photo_url' in data:
+        current_user.photo_url = data['photo_url']
     if 'password' in data:
         current_user.password_hash = bcrypt.generate_password_hash(data['password']).decode('utf-8')
     
@@ -193,6 +193,26 @@ def update_profile(current_user):
     except:
         db.session.rollback()
         return jsonify({'message': 'Update failed!'}), 500
+
+@routes.route('/me/photo', methods=['POST'])
+@token_required
+def upload_photo(current_user):
+    if 'photo' not in request.files:
+        return jsonify({'message': 'No file part'}), 400
+    file = request.files['photo']
+    if file.filename == '':
+        return jsonify({'message': 'No selected file'}), 400
+    if file:
+        filename = secure_filename(file.filename)
+        ext = os.path.splitext(filename)[1]
+        new_filename = f"user_{current_user.id}_{int(datetime.datetime.now().timestamp())}{ext}"
+        upload_folder = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'uploads')
+        filepath = os.path.join(upload_folder, new_filename)
+        file.save(filepath)
+        
+        current_user.photo_url = f"/uploads/{new_filename}"
+        db.session.commit()
+        return jsonify({'message': 'Photo uploaded successfully', 'photo_url': current_user.photo_url})
 
 # Dashboard Stats
 @routes.route('/dashboard', methods=['GET'])

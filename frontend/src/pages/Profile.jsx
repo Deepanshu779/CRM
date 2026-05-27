@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { profileService } from '../services/api';
-import { User, Mail, Shield, Calendar, Save } from 'lucide-react';
+import { User, Mail, Shield, Calendar, Save, Camera, Eye } from 'lucide-react';
 
 const Profile = () => {
-  const [profile, setProfile] = useState({ username: '', email: '', role: '', created_at: '' });
+  const [profile, setProfile] = useState({ username: '', email: '', role: '', created_at: '', photo_url: '' });
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
+  const [showPhotoMenu, setShowPhotoMenu] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -33,6 +35,26 @@ const Profile = () => {
     }
   };
 
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const res = await profileService.uploadPhoto(file);
+      setProfile({...profile, photo_url: res.data.photo_url});
+      setMessage('Photo uploaded successfully!');
+      setTimeout(() => setMessage(''), 3000);
+    } catch (err) {
+      setMessage('Failed to upload photo.');
+    }
+  };
+
+  const handleViewPhoto = () => {
+    if (profile.photo_url) {
+      window.open(profile.photo_url, '_blank');
+    }
+    setShowPhotoMenu(false);
+  };
+
   if (loading) return <div className="animate-fade-in">Accessing Profile Directory...</div>;
 
   return (
@@ -42,8 +64,40 @@ const Profile = () => {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '2.5rem' }}>
         {/* Profile Info Card */}
         <div className="card shadow-sm" style={{ textAlign: 'center', padding: '3rem 2rem' }}>
-          <div style={{ width: '100px', height: '100px', borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', fontSize: '2.5rem' }}>
-            👤
+          <div style={{ position: 'relative', width: '100px', margin: '0 auto 1.5rem' }}>
+            <div 
+              onClick={() => setShowPhotoMenu(!showPhotoMenu)}
+              style={{ width: '100px', height: '100px', borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', overflow: 'hidden', cursor: 'pointer', border: '2px solid transparent', transition: 'border 0.2s', ...(showPhotoMenu ? {borderColor: '#3b82f6'} : {}) }}
+            >
+              {profile.photo_url ? <img src={profile.photo_url} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '👤'}
+            </div>
+            
+            {showPhotoMenu && (
+              <div className="card shadow-sm" style={{ position: 'absolute', top: '105px', left: '50%', transform: 'translateX(-50%)', width: '160px', padding: '0.5rem', zIndex: 10, textAlign: 'left' }}>
+                <button 
+                  type="button"
+                  onClick={handleViewPhoto}
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '0.5rem', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '0.9rem', borderRadius: '4px' }}
+                >
+                  <Eye size={16} /> View Photo
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => { fileInputRef.current.click(); setShowPhotoMenu(false); }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '0.5rem', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '0.9rem', borderRadius: '4px', marginTop: '4px' }}
+                >
+                  <Camera size={16} /> Change Photo
+                </button>
+              </div>
+            )}
+            
+            <input 
+              type="file" 
+              accept="image/*" 
+              ref={fileInputRef} 
+              style={{ display: 'none' }} 
+              onChange={handlePhotoUpload} 
+            />
           </div>
           <h3 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '0.5rem' }}>{profile.username}</h3>
           <p className="text-dim" style={{ fontSize: '0.9rem', marginBottom: '2rem' }}>{profile.email}</p>
@@ -90,6 +144,8 @@ const Profile = () => {
                 />
               </div>
             </div>
+
+
 
             <button type="submit" className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center', width: '100%' }}>
               <Save size={18} /> Update Profile

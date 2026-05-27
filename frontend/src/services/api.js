@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://127.0.0.1:5000/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000/api',
 });
 
 api.interceptors.request.use((config) => {
@@ -39,6 +39,15 @@ export const interactionService = {
 export const profileService = {
   get: () => api.get('/me'),
   update: (data) => api.put('/me/update', data),
+  uploadPhoto: (file) => {
+    const formData = new FormData();
+    formData.append('photo', file);
+    return api.post('/me/photo', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
 };
 
 export const dashboardService = {
